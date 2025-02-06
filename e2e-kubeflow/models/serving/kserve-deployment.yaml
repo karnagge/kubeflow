@@ -1,0 +1,36 @@
+apiVersion: "serving.kubeflow.org/v1beta1"
+kind: "InferenceService"
+metadata:
+  name: "xgboost-model"
+  namespace: "kubeflow-user"
+spec:
+  predictor:
+    model:
+      modelFormat:
+        name: xgboost
+      storageUri: "pvc://models/serving"
+      resources:
+        requests:
+          cpu: "2"
+          memory: "4Gi"
+        limits:
+          cpu: "4"
+          memory: "8Gi"
+  transformer:
+    containers:
+      - image: xgboost-preprocessor:latest
+        name: preprocessor
+        env:
+          - name: MODEL_NAME
+            value: "xgboost-model"
+          - name: STORAGE_URI
+            value: "pvc://models/serving"
+          - name: TRANSFORMERS_CACHE
+            value: "/tmp/transformers-cache"
+        resources:
+          requests:
+            cpu: "1"
+            memory: "2Gi"
+          limits:
+            cpu: "2"
+            memory: "4Gi"

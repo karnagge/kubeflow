@@ -1,0 +1,81 @@
+name: XGBoost Training
+description: Trains the XGBoost model using the best hyperparameters from Katib
+inputs:
+  - {name: train_data, description: 'Processed training dataset'}
+  - {name: val_data, description: 'Processed validation dataset'}
+  - {name: hyperparameters, description: 'Best hyperparameters from Katib'}
+outputs:
+  - {name: model_output, description: 'Trained XGBoost model'}
+  - {name: metrics_output, description: 'Training metrics'}
+implementation:
+  container:
+    image: python:3.8
+    command:
+      - python
+      - -c
+      - |
+        import pandas as pd
+        import numpy as np
+        import xgboost as xgb
+        from sklearn.metrics import accuracy_score, roc_auc_score
+        import json
+        import os
+
+        # Load data
+        train_data = pd.read_csv('{{inputs.train_data}}')
+        val_data = pd.read_csv('{{inputs.val_data}}')
+
+        X_train = train_data.drop('target', axis=1)
+        y_train = train_data['target']
+        X_val = val_data.drop('target', axis=1)
+        y_val = val_data['target']
+
+        # Load hyperparameters
+        with open('{{inputs.hyperparameters}}', 'r') as f:
+            params = json.load(f)
+
+        # Create DMatrix objects
+        dtrain = xgb.DMatrix(X_train, label=y_train)
+        dval = xgb.DMatrix(X_val, label=y_val)
+
+        # Set up watchlist
+        watchlist = [(dtrain, 'train'), (dval, 'validation')]
+
+        # Train model
+        model = xgb.train(
+            params,
+            dtrain,
+            params['n_estimators'],
+            watchlist,
+            early_stopping_rounds=50,
+            verbose_eval=100
+        )
+
+        # Make predictions
+        y_train_pred = model.predict(dtrain)
+        y_val_pred = model.predict(dval)
+
+        # Calculate metrics
+        metrics = {
+            'train_accuracy': float(accuracy_score(y_train, y_train_pred > 0.5)),
+            'train_auc': float(roc_auc_score(y_train, y_train_pred)),
+            'val_accuracy': float(accuracy_score(y_val, y_val_pred > 0.5)),
+            'val_auc': float(roc_auc_score(y_val, y_val_pred)),
+            'best_iteration': model.best_iteration,
+            'best_score': float(model.best_score)
+        }
+
+        # Save model and metrics
+        os.makedirs(os.path.dirname('{{outputs.model_output}}'), exist_ok=True)
+        os.makedirs(os.path.dirname('{{outputs.metrics_output}}'), exist_ok=True)
+
+        # Save model in both XGBoost and ONNX formats
+        model.save_model('{{outputs.model_output}}')
+
+        # Save metrics
+        with open('{{outputs.metrics_output}}', 'w') as f:
+            json.dump({
+                'metrics': metrics,
+                'parameters': params,
+                'feature_names': list(X_train.columns)
+            }, f, indent=2)

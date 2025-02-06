@@ -1,0 +1,166 @@
+{
+  "train": {
+    "accuracy": 1.0,
+    "confusion_matrix": [
+      [
+        3000,
+        0
+      ],
+      [
+        0,
+        3000
+      ]
+    ],
+    "classification_report": "              precision    recall  f1-score   support\n\n           0       1.00      1.00      1.00      3000\n           1       1.00      1.00      1.00      3000\n\n    accuracy                           1.00      6000\n   macro avg       1.00      1.00      1.00      6000\nweighted avg       1.00      1.00      1.00      6000\n"
+  },
+  "validation": {
+    "accuracy": 0.898,
+    "confusion_matrix": [
+      [
+        903,
+        97
+      ],
+      [
+        107,
+        893
+      ]
+    ],
+    "classification_report": "              precision    recall  f1-score   support\n\n           0       0.89      0.90      0.90      1000\n           1       0.90      0.89      0.90      1000\n\n    accuracy                           0.90      2000\n   macro avg       0.90      0.90      0.90      2000\nweighted avg       0.90      0.90      0.90      2000\n"
+  },
+  "test": {
+    "accuracy": 0.899,
+    "confusion_matrix": [
+      [
+        915,
+        85
+      ],
+      [
+        117,
+        883
+      ]
+    ],
+    "classification_report": "              precision    recall  f1-score   support\n\n           0       0.89      0.92      0.90      1000\n           1       0.91      0.88      0.90      1000\n\n    accuracy                           0.90      2000\n   macro avg       0.90      0.90      0.90      2000\nweighted avg       0.90      0.90      0.90      2000\n"
+  },
+  "feature_importance": [
+    {
+      "feature": "feature_2",
+      "importance": 6.805177211761475
+    },
+    {
+      "feature": "feature_19",
+      "importance": 6.639829158782959
+    },
+    {
+      "feature": "feature_15",
+      "importance": 5.402554988861084
+    },
+    {
+      "feature": "feature_18",
+      "importance": 5.088741779327393
+    },
+    {
+      "feature": "feature_13",
+      "importance": 4.70472526550293
+    },
+    {
+      "feature": "feature_8",
+      "importance": 4.661497116088867
+    },
+    {
+      "feature": "feature_14",
+      "importance": 4.20350456237793
+    },
+    {
+      "feature": "feature_11",
+      "importance": 4.135776519775391
+    },
+    {
+      "feature": "feature_7",
+      "importance": 3.8857922554016113
+    },
+    {
+      "feature": "feature_5",
+      "importance": 3.8429620265960693
+    },
+    {
+      "feature": "feature_17",
+      "importance": 3.803036689758301
+    },
+    {
+      "feature": "feature_3",
+      "importance": 3.716649055480957
+    },
+    {
+      "feature": "feature_1",
+      "importance": 3.6955854892730713
+    },
+    {
+      "feature": "feature_12",
+      "importance": 3.371030569076538
+    },
+    {
+      "feature": "feature_16",
+      "importance": 3.356642961502075
+    },
+    {
+      "feature": "feature_10",
+      "importance": 3.051003932952881
+    },
+    {
+      "feature": "feature_0",
+      "importance": 2.942901372909546
+    },
+    {
+      "feature": "feature_9",
+      "importance": 2.6139626502990723
+    },
+    {
+      "feature": "feature_4",
+      "importance": 2.5995187759399414
+    },
+    {
+      "feature": "feature_6",
+      "importance": 2.5485153198242188
+    },
+    {
+      "feature": "feature_0_x_feature_3",
+      "importance": 2.5402567386627197
+    },
+    {
+      "feature": "feature_0_x_feature_1",
+      "importance": 2.1070828437805176
+    },
+    {
+      "feature": "feature_0_x_feature_2",
+      "importance": 2.008432149887085
+    },
+    {
+      "feature": "feature_0_x_feature_4",
+      "importance": 1.9093576669692993
+    },
+    {
+      "feature": "feature_1_x_feature_2",
+      "importance": 1.903006672859192
+    },
+    {
+      "feature": "feature_1_x_feature_3",
+      "importance": 1.8611493110656738
+    },
+    {
+      "feature": "feature_1_x_feature_4",
+      "importance": 1.8415195941925049
+    },
+    {
+      "feature": "feature_2_x_feature_3",
+      "importance": 1.806255578994751
+    },
+    {
+      "feature": "feature_3_x_feature_4",
+      "importance": 1.6819067001342773
+    },
+    {
+      "feature": "feature_2_x_feature_4",
+      "importance": 1.4915094375610352
+    }
+  ]
+}

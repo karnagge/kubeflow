@@ -1,0 +1,93 @@
+apiVersion: kubeflow.org/v1beta1
+kind: Experiment
+metadata:
+  name: xgboost-hpo
+spec:
+  objective:
+    type: maximize
+    goal: 0.90  # Target accuracy of 90%
+    objectiveMetricName: Validation-Accuracy
+    additionalMetricNames:
+      - Training-Accuracy
+      - Training-AUC
+      - Validation-AUC
+  algorithm:
+    algorithmName: bayesianoptimization
+    algorithmSettings:
+      - name: random_state
+        value: "42"
+  trialTemplate:
+    primaryContainerName: training
+    trialParameters:
+      - name: learningRate
+        description: Learning rate for XGBoost
+        reference: learning_rate
+      - name: maxDepth
+        description: Maximum tree depth
+        reference: max_depth
+      - name: numEstimators
+        description: Number of trees
+        reference: n_estimators
+      - name: minChildWeight
+        description: Minimum sum of instance weight needed in a child
+        reference: min_child_weight
+      - name: subsample
+        description: Subsample ratio of training instances
+        reference: subsample
+    trialSpec:
+      apiVersion: batch/v1
+      kind: Job
+      spec:
+        template:
+          spec:
+            containers:
+              - name: training
+                image: xgboost-training:latest  # Will be built in pipeline
+                command:
+                  - "python"
+                  - "/opt/training/train.py"
+                  - "--learning_rate=${trialParameters.learningRate}"
+                  - "--max_depth=${trialParameters.maxDepth}"
+                  - "--n_estimators=${trialParameters.numEstimators}"
+                  - "--min_child_weight=${trialParameters.minChildWeight}"
+                  - "--subsample=${trialParameters.subsample}"
+                resources:
+                  limits:
+                    cpu: 4
+                    memory: 8Gi
+                  requests:
+                    cpu: 2
+                    memory: 4Gi
+            restartPolicy: Never
+  parameters:
+    - name: learning_rate
+      parameterType: double
+      feasibleSpace:
+        min: "0.01"
+        max: "0.3"
+    - name: max_depth
+      parameterType: int
+      feasibleSpace:
+        min: "3"
+        max: "10"
+    - name: n_estimators
+      parameterType: int
+      feasibleSpace:
+        min: "100"
+        max: "1000"
+    - name: min_child_weight
+      parameterType: int
+      feasibleSpace:
+        min: "1"
+        max: "7"
+    - name: subsample
+      parameterType: double
+      feasibleSpace:
+        min: "0.6"
+        max: "1.0"
+  maxTrialCount: 25
+  maxFailedTrialCount: 3
+  parallelTrialCount: 3
+  metricsCollectorSpec:
+    collector:
+      kind: StdOut

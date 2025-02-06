@@ -1,0 +1,111 @@
+name: Data Preprocessing
+description: Preprocesses data for XGBoost model training
+inputs:
+  - {name: train_data, description: 'Raw training dataset'}
+  - {name: val_data, description: 'Raw validation dataset'}
+  - {name: test_data, description: 'Raw test dataset'}
+outputs:
+  - {name: processed_train_data, description: 'Processed training dataset'}
+  - {name: processed_val_data, description: 'Processed validation dataset'}
+  - {name: processed_test_data, description: 'Processed test dataset'}
+  - {name: preprocessing_state, description: 'Saved preprocessing objects'}
+implementation:
+  container:
+    image: python:3.8
+    command:
+      - python
+      - -c
+      - |
+        import pandas as pd
+        import numpy as np
+        from sklearn.preprocessing import StandardScaler
+        from sklearn.impute import SimpleImputer
+        import os
+        import joblib
+
+        def load_data(path):
+            df = pd.read_csv(path)
+            return df.drop('target', axis=1), df['target']
+
+        def create_interaction_features(X):
+            base_features = X.columns[:5]
+            for i in range(len(base_features)):
+                for j in range(i + 1, len(base_features)):
+                    feat1, feat2 = base_features[i], base_features[j]
+                    X[f"{feat1}_x_{feat2}"] = X[feat1] * X[feat2]
+            return X
+
+        # Load datasets
+        X_train, y_train = load_data('{{inputs.train_data}}')
+        X_val, y_val = load_data('{{inputs.val_data}}')
+        X_test, y_test = load_data('{{inputs.test_data}}')
+
+        # Initialize preprocessors
+        imputer = SimpleImputer(strategy='median')
+        scaler = StandardScaler()
+
+        # Fit and transform training data
+        X_train_imputed = pd.DataFrame(
+            imputer.fit_transform(X_train),
+            columns=X_train.columns,
+            index=X_train.index
+        )
+        X_train_scaled = pd.DataFrame(
+            scaler.fit_transform(X_train_imputed),
+            columns=X_train_imputed.columns,
+            index=X_train_imputed.index
+        )
+        X_train_final = create_interaction_features(X_train_scaled.copy())
+
+        # Transform validation data
+        X_val_imputed = pd.DataFrame(
+            imputer.transform(X_val),
+            columns=X_val.columns,
+            index=X_val.index
+        )
+        X_val_scaled = pd.DataFrame(
+            scaler.transform(X_val_imputed),
+            columns=X_val_imputed.columns,
+            index=X_val_imputed.index
+        )
+        X_val_final = create_interaction_features(X_val_scaled.copy())
+
+        # Transform test data
+        X_test_imputed = pd.DataFrame(
+            imputer.transform(X_test),
+            columns=X_test.columns,
+            index=X_test.index
+        )
+        X_test_scaled = pd.DataFrame(
+            scaler.transform(X_test_imputed),
+            columns=X_test_imputed.columns,
+            index=X_test_imputed.index
+        )
+        X_test_final = create_interaction_features(X_test_scaled.copy())
+
+        # Save processed datasets
+        os.makedirs(os.path.dirname('{{outputs.processed_train_data}}'), exist_ok=True)
+        os.makedirs(os.path.dirname('{{outputs.processed_val_data}}'), exist_ok=True)
+        os.makedirs(os.path.dirname('{{outputs.processed_test_data}}'), exist_ok=True)
+        os.makedirs(os.path.dirname('{{outputs.preprocessing_state}}'), exist_ok=True)
+
+        # Save processed data with targets
+        train_final = X_train_final.copy()
+        train_final['target'] = y_train
+        train_final.to_csv('{{outputs.processed_train_data}}', index=False)
+
+        val_final = X_val_final.copy()
+        val_final['target'] = y_val
+        val_final.to_csv('{{outputs.processed_val_data}}', index=False)
+
+        test_final = X_test_final.copy()
+        test_final['target'] = y_test
+        test_final.to_csv('{{outputs.processed_test_data}}', index=False)
+
+        # Save preprocessing objects
+        preprocessing_objects = {
+            'imputer': imputer,
+            'scaler': scaler,
+            'feature_names': list(X_train_final.columns)
+        }
+        joblib.dump(preprocessing_objects, '{{outputs.preprocessing_state}}')
